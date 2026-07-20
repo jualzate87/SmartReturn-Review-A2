@@ -835,12 +835,9 @@
 }
 
 /*
- * Typography rule: ALL value columns use the same font-size and weight.
- * Only COLOR differentiates them — current year = dark, prior = muted, diff = colored.
- *
- * Column widths (fixed, px) + ~80px gap so numeric cols use available width
- * instead of clustering on the right.
- * Both header and data rows share these widths/gaps exactly.
+ * Even column spacing — same gap from label → CURRENT YEAR as between
+ * value columns. Label column has a fixed flex basis (does not grow into
+ * a huge empty middle). Below 949px gaps compress to 20px via @container.
  */
 .summaryColHeaders {
   display: flex;
@@ -901,6 +898,7 @@
   text-align: left;
   gap: 24px;
   box-sizing: border-box;
+  min-width: 0;
 }
 .summarySectionRow:focus-visible {
   outline: 2px solid var(--color-action-standard, #0077c5);
@@ -933,6 +931,10 @@
   font-size: var(--font-size-component-small); /* 14px */
   font-weight: var(--font-weight-component-bold); /* 600 */
   color: #1c202a;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
 }
 
 /* ── Value columns — ALL share the same font-size/weight; only color varies ── */
@@ -1129,6 +1131,8 @@
   gap: 24px;
   transition: background 80ms;
   background: #fff;
+  min-width: 0;
+  box-sizing: border-box;
 }
 .summarySubRowClickable { cursor: pointer; }
 .summarySubRowClickable:hover { background: #f8f9fb; }
@@ -1153,6 +1157,10 @@
   align-items: center;
   gap: 5px;
   line-height: var(--line-height-component);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
 }
 .summarySubLabelCalc {
   color: #6b6c72;
