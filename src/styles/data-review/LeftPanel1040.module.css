@@ -835,14 +835,14 @@
 }
 
 /*
- * Even column spacing — same gap from label → CURRENT YEAR as between
- * value columns. Label column has a fixed flex basis (does not grow into
- * a huge empty middle). Below 949px gaps compress to 20px via @container.
+ * Wide panels: fixed label column + value group (flex: 1) that fills the card.
+ * space-between spreads CY / PY / Change $ / Change % / actions across remaining
+ * width (min 24px gap). Label does not grow. Below 949px @container compresses.
  */
 .summaryColHeaders {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
+  width: 100%;
   padding: 5px 32px;
   border-top: 1px solid #f1f3f7;
   background: #fafbfc;
@@ -858,12 +858,13 @@
   max-width: 200px;
 }
 
-/* Group the 4 col labels to mirror .summaryRowRight layout exactly */
+/* Group col labels + actions spacer — mirrors .summaryRowRight layout */
 .summaryColValues {
   display: flex;
   align-items: center;
+  flex: 1;
+  justify-content: space-between;
   gap: 24px;
-  flex-shrink: 1;
   min-width: 0;
 }
 
@@ -889,7 +890,6 @@
   width: 100%;
   display: flex;
   align-items: center;
-  justify-content: flex-start;
   padding: 10px 32px;
   background: #f7f8fa;
   border: none;
@@ -941,8 +941,9 @@
 .summaryRowRight {
   display: flex;
   align-items: center;
+  flex: 1;
+  justify-content: space-between;
   gap: 24px;
-  flex-shrink: 1;
   min-width: 0;
 }
 
@@ -1125,7 +1126,7 @@
 .summarySubRow {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
+  width: 100%;
   padding: 8px 32px 8px 52px; /* 52px left = 32px margin + 20px indent */
   border-top: 1px solid #f1f3f7;
   gap: 24px;
@@ -1627,6 +1628,7 @@
   }
   .summaryColValues,
   .summaryRowRight {
+    justify-content: flex-start;
     gap: 20px;
   }
   .summaryColSpacer,
