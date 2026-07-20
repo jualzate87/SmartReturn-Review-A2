@@ -1,4 +1,4 @@
-const STORAGE_KEY = 'ids-prototype-config'
+const STORAGE_KEY = 'protoa2-prototype-config'
 
 export interface PrototypeConfig {
   theme: string
