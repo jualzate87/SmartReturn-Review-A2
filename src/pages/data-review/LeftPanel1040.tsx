@@ -880,11 +880,11 @@ export default function LeftPanel1040({
             <div className={styles.summaryColHeaders}>
               <div className={styles.summaryColSpacer} />
               <div className={styles.summaryColValues}>
-                <div className={styles.summaryColLabel} style={{ width: 108 }}>Current year</div>
-                <div className={styles.summaryColLabel} style={{ width: 80 }}>Prior year</div>
-                <div className={styles.summaryColLabel} style={{ width: 72 }}>Change $</div>
-                <div className={styles.summaryColLabel} style={{ width: 52 }}>Change %</div>
-                <div className={styles.summaryColLabel} style={{ width: 96 }} />
+                <div className={styles.summaryColLabel}>Current year</div>
+                <div className={styles.summaryColLabel}>Prior year</div>
+                <div className={styles.summaryColLabel}>Change $</div>
+                <div className={styles.summaryColLabel}>Change %</div>
+                <div className={styles.summaryColLabel} />
               </div>
             </div>
 
@@ -924,7 +924,7 @@ export default function LeftPanel1040({
                           && getTaxControlBreakdown(SUMMARY_TO_CONTROL[cat.totalField], controlSystemVals)?.kind === 'calc'
                         return (
                           <div className={styles.summaryRowRight}>
-                            <div className={styles.summaryCurrVal} style={{ width: 108 }}>
+                            <div className={styles.summaryCurrVal}>
                               <span className={styles.summaryCurrValText}>${fmt(cat.totalCurr)}</span>
                               {totalHasBreakdown && (
                                 <Tooltip
@@ -1031,7 +1031,7 @@ export default function LeftPanel1040({
                           </div>
                           <div className={styles.summaryRowRight}>
                             {/* Current year — value + info affordance (info stays here for drilldown) */}
-                            <div className={styles.summaryCurrVal} style={{ width: 108 }}>
+                            <div className={styles.summaryCurrVal}>
                               <span
                                 className={`${styles.summaryCurrValText} ${row.kind === 'calc' ? styles.summaryCurrValCalc : ''} ${isBlue ? styles.summaryCurrValBlue : ''} ${isOrange ? styles.summaryCurrValOrange : ''}`}
                               >
@@ -1167,7 +1167,7 @@ export default function LeftPanel1040({
                   <span className={styles.summaryOweLabel}>Amount you owe · Line 37</span>
                 </div>
                 <div className={styles.summaryRowRight}>
-                  <div className={styles.summaryCurrVal} style={{ width: 108 }}>
+                  <div className={styles.summaryCurrVal}>
                     <span className={`${styles.summaryCurrValText} ${styles.summaryOweAmt}`}>${fmt(oweAmount)}</span>
                     <Tooltip
                       text={summaryInfoDiscoveryTooltip('calc')}
