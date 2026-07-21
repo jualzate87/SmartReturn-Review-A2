@@ -67,7 +67,7 @@ export default function CoachTip({
 
 const STORAGE_PREFIX = 'protoa2-coach-tip:'
 
-export type CoachTipId = 'hideSummary'
+export type CoachTipId = 'hideSummary' | 'outputSources'
 
 export function readCoachTipShown(id: CoachTipId): boolean {
   try {

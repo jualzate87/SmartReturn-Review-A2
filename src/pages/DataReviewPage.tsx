@@ -152,6 +152,8 @@ export default function DataReviewPage() {
   const [outputFormsNudgeOpen, setOutputFormsNudgeOpen] = useState(false)
   /** First-run coach tip: hide summary */
   const [coachTip, setCoachTip] = useState<CoachTipId | null>(null)
+  /** Coach tip: click Summary amounts to see source documents */
+  const [outputSourcesCoach, setOutputSourcesCoach] = useState(false)
   /** Explicit left-panel px width during Summary collapse/expand (null = natural flex). */
   const [leftAnimWidth, setLeftAnimWidth] = useState<number | null>(null)
   /** Keep doc|Details side-by-side during Summary toggle so flexDirection doesn't flip mid-motion. */
@@ -248,13 +250,30 @@ export default function DataReviewPage() {
     setCoachTip(null)
   }, [])
 
-  // Sequence hide-summary coach tip once sources are open
+  const dismissOutputSourcesCoach = useCallback(() => {
+    markCoachTipShown('outputSources')
+    setOutputSourcesCoach(false)
+  }, [])
+
+  // First tip: teach output→source flyouts while Summary is visible, BEFORE source docs open
+  useEffect(() => {
+    if (phase !== 'import' || !show1040) return
+    if (readCoachTipShown('outputSources')) return
+    setOutputSourcesCoach(true)
+  }, [phase, show1040])
+
+  // Second tip: Hide outputs — only after source docs are open and sources tip is done
   useEffect(() => {
     if (phase !== 'import' || !importsStarted || !rightPanelVisible) return
-    if (!readCoachTipShown('hideSummary') && show1040) {
-      setCoachTip('hideSummary')
+    if (!readCoachTipShown('hideSummary')) {
+      if (show1040) {
+        if (outputSourcesCoach || !readCoachTipShown('outputSources')) return
+        setCoachTip('hideSummary')
+      } else {
+        markCoachTipShown('hideSummary')
+      }
     }
-  }, [phase, importsStarted, rightPanelVisible, show1040])
+  }, [phase, importsStarted, rightPanelVisible, show1040, outputSourcesCoach])
 
   // One-shot nudge to review output forms after import review is fully complete
   useEffect(() => {
@@ -515,7 +534,7 @@ export default function DataReviewPage() {
 
   // While Summary is animating or collapsed, right panel flex-fills so it grows/shrinks
   // as the left width transitions — avoids a px→flex mode flip mid-collapse.
-  const rightPanelFills = inImportPhase && (!show1040 || leftAnimWidth !== null)
+  const rightPanelFills = (!show1040 || leftAnimWidth !== null) && rightPanelVisible
 
   const handleHideSummary = useCallback(() => {
     const body = bodyRef.current
@@ -652,10 +671,10 @@ export default function DataReviewPage() {
             <button
               className={styles.form1040Handle}
               onClick={handleShowSummary}
-              aria-label="Show 1040"
+              aria-label="Show outputs"
             >
               <ChevronRight size="small" className={styles.form1040HandleIcon} />
-              <span className={styles.form1040HandleLabel}>Show Summary</span>
+              <span className={styles.form1040HandleLabel}>Show outputs</span>
             </button>
           </div>
         )}
@@ -667,24 +686,24 @@ export default function DataReviewPage() {
                interpolate together; otherwise flex:1 grows into remaining space. */
             flex: leftAnimWidth !== null
               ? `0 0 ${leftAnimWidth}px`
-              : (inImportPhase && !show1040) ? '0 0 0px' : 1,
+              : !show1040 ? '0 0 0px' : 1,
             width: leftAnimWidth !== null
               ? leftAnimWidth
-              : (inImportPhase && !show1040) ? 0 : undefined,
-            opacity: (inImportPhase && !show1040) ? 0 : 1,
+              : !show1040 ? 0 : undefined,
+            opacity: !show1040 ? 0 : 1,
             /* Keep Summary ≥ 795.7px so Return Breakdown labels aren’t truncated.
                Collapse animation / Hide Summary still use minWidth 0. */
-            minWidth: leftAnimWidth !== null || (inImportPhase && !show1040)
+            minWidth: leftAnimWidth !== null || !show1040
               ? 0
               : LEFT_PANEL_MIN_WIDTH,
             transition: panelResizing ? 'none' : undefined,
           }}
         >
-          {inImportPhase && show1040 && (rightPanelVisible || notesOpen) && (
+          {show1040 && (rightPanelVisible || notesOpen) && (
             <CoachTip
               open={coachTip === 'hideSummary'}
-              title="Hide the Summary"
-              message="Need more room for source documents? Use Hide Summary to collapse this panel. You can bring it back anytime with Show Summary."
+              title="Hide outputs"
+              message="Need more room for source documents? Hide outputs to collapse this panel. You can bring it back anytime with Show outputs."
               onClose={() => dismissCoachTip('hideSummary')}
               position="bottom"
               alignment="left"
@@ -697,9 +716,9 @@ export default function DataReviewPage() {
                   if (coachTip === 'hideSummary') dismissCoachTip('hideSummary')
                   handleHideSummary()
                 }}
-                aria-label="Hide Summary"
+                aria-label="Hide outputs"
               >
-                <ChevronLeft size="small" /> Hide Summary
+                <ChevronLeft size="small" /> Hide outputs
               </Button>
             </CoachTip>
           )}
@@ -728,6 +747,8 @@ export default function DataReviewPage() {
             onOutputFormChange={setOutputFormId}
             outputFormsNudgeOpen={outputFormsNudgeOpen}
             onDismissOutputFormsNudge={dismissOutputFormsNudge}
+            outputSourcesCoachOpen={outputSourcesCoach}
+            onDismissOutputSourcesCoach={dismissOutputSourcesCoach}
             onAddFieldNote={(text, context) => handleAddNote(text, context)}
             onNavigateToSourceDoc={handleNavigateToSourceDoc}
             onNavigateSource={handleNavigateSource}
@@ -778,11 +799,11 @@ export default function DataReviewPage() {
                 role="separator"
                 aria-orientation="vertical"
                 aria-label="Resize Summary and Source Documents"
-                aria-hidden={inImportPhase && !show1040}
+                aria-hidden={!show1040}
                 style={{
-                  width: (inImportPhase && !show1040) ? 0 : PANEL_DRAG_HANDLE_WIDTH,
-                  opacity: (inImportPhase && !show1040) ? 0 : 1,
-                  pointerEvents: (inImportPhase && !show1040) ? 'none' : 'auto',
+                  width: !show1040 ? 0 : PANEL_DRAG_HANDLE_WIDTH,
+                  opacity: !show1040 ? 0 : 1,
+                  pointerEvents: !show1040 ? 'none' : 'auto',
                   transition: panelResizing ? 'none' : undefined,
                 }}
               >
