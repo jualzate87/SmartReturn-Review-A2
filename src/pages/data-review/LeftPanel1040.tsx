@@ -97,7 +97,7 @@ interface LeftPanel1040Props {
 function summaryInfoDiscoveryTooltip(kind: 'calc' | 'source'): string {
   return kind === 'calc'
     ? 'Click to see how this amount is calculated from underlying lines.'
-    : 'Click to see which documents feed this output amount.'
+    : 'Explore which source documents feed this line.'
 }
 
 // Threshold: >=15% change AND >$300 estimated tax impact
@@ -302,6 +302,14 @@ export default function LeftPanel1040({
     if (controlledOutputFormId === undefined) setInternalOutputFormId(id)
     if (outputFormsNudgeOpen) onDismissOutputFormsNudge?.()
   }
+
+  // Keep the first-run sources tip visible — scroll W-2 wages into view when it opens
+  useEffect(() => {
+    if (!outputSourcesCoachOpen || outputFormId !== 'summary') return
+    const row = document.querySelector('[data-field-row="wages"]') as HTMLElement | null
+    row?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+  }, [outputSourcesCoachOpen, outputFormId])
+
   const view: 'table' | 'form' = outputFormId === 'summary' ? 'table' : 'form'
   // Table view: which categories are expanded
   const [expanded, setExpanded] = useState<Set<string>>(new Set(['income', 'deductions', 'tax', 'payments']))
@@ -1084,11 +1092,11 @@ export default function LeftPanel1040({
                                     return (
                                       <CoachTip
                                         open
-                                        title="See where amounts come from"
-                                        message="Click an output row to see the source documents that feed that field. Open a document from the flyout."
+                                        title="Source documents"
+                                        message="Explore which source documents feed this line."
                                         onClose={() => onDismissOutputSourcesCoach?.()}
-                                        position="left"
-                                        alignment="middle"
+                                        position="top"
+                                        alignment="center"
                                       >
                                         <span className={styles.summaryInfoCoachAnchor}>
                                           {infoBtn}

@@ -153,7 +153,13 @@ export default function DataReviewPage() {
   /** First-run coach tip: hide summary */
   const [coachTip, setCoachTip] = useState<CoachTipId | null>(null)
   /** Coach tip: click Summary amounts to see source documents */
-  const [outputSourcesCoach, setOutputSourcesCoach] = useState(false)
+  const [outputSourcesCoach, setOutputSourcesCoach] = useState(() => {
+    try {
+      return sessionStorage.getItem('protoa2-coach-tip:outputSourcesFirst') !== '1'
+    } catch {
+      return true
+    }
+  })
   /** Explicit left-panel px width during Summary collapse/expand (null = natural flex). */
   const [leftAnimWidth, setLeftAnimWidth] = useState<number | null>(null)
   /** Keep doc|Details side-by-side during Summary toggle so flexDirection doesn't flip mid-motion. */
@@ -251,14 +257,15 @@ export default function DataReviewPage() {
   }, [])
 
   const dismissOutputSourcesCoach = useCallback(() => {
-    markCoachTipShown('outputSources')
+    markCoachTipShown('outputSourcesFirst')
     setOutputSourcesCoach(false)
   }, [])
 
-  // First tip: teach output→source flyouts while Summary is visible, BEFORE source docs open
+  // First tip as soon as review starts: teach output→source on Summary (before docs open)
   useEffect(() => {
     if (phase !== 'import' || !show1040) return
-    if (readCoachTipShown('outputSources')) return
+    if (readCoachTipShown('outputSourcesFirst')) return
+    setOutputFormId('summary')
     setOutputSourcesCoach(true)
   }, [phase, show1040])
 
@@ -267,7 +274,7 @@ export default function DataReviewPage() {
     if (phase !== 'import' || !importsStarted || !rightPanelVisible) return
     if (!readCoachTipShown('hideSummary')) {
       if (show1040) {
-        if (outputSourcesCoach || !readCoachTipShown('outputSources')) return
+        if (outputSourcesCoach || !readCoachTipShown('outputSourcesFirst')) return
         setCoachTip('hideSummary')
       } else {
         markCoachTipShown('hideSummary')
