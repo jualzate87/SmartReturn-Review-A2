@@ -234,9 +234,6 @@ export default function LeftPanel1040({
   const fieldHasPopover = (field: string) =>
     !!FIELD_META[field] || !!getFieldOrigin(field, originTotals, liveAmounts)
 
-  const reviewedHas = (key: string) =>
-    reviewedFields instanceof Map ? reviewedFields.has(key) : reviewedFields.has(key)
-
   const controlSystemVals = getControlSystemValues({
     total1a: wages1040,
     taxableInterest: taxableInterest1040,
@@ -553,25 +550,16 @@ export default function LeftPanel1040({
     }
   }
 
-  const handleRowClick = (field: string, rowEl?: HTMLElement | null) => {
-    // Row click opens the same source/calc flyout as the (i) icon; docs open from the flyout
+  /** Row click selects/highlights only — popovers open from the (i) button. */
+  const handleRowClick = (field: string, _rowEl?: HTMLElement | null) => {
     onFieldClick?.(field)
-    if (fieldHasPopover(field) && rowEl) {
-      if (popoverField === field) {
-        setPopoverField(null)
-        setPopoverRect(null)
-        return
-      }
-      openPopoverForRow(field, rowEl)
-      return
-    }
-    if (popoverField) {
+    if (popoverField && popoverField !== field) {
       setPopoverField(null)
       setPopoverRect(null)
     }
   }
 
-  /** Form view: open FieldPopover from (i) or row click. */
+  /** Form view: open FieldPopover only from the (i) button. */
   const openFormInfo = (field: string, btn: HTMLElement) => {
     if (popoverField === field) {
       setPopoverField(null)
@@ -631,7 +619,7 @@ export default function LeftPanel1040({
     const commentable = !!field && !!onAddFieldNote
     const isIssueHighlight = !!field && field === issueField
     const isSelected       = !!field && activeHighlight === field
-    const isReviewed       = !!field && reviewedHas(field)
+    // Output checks are user-driven only (not Phase 1 “mark correct” on inputs)
     const isChecked        = !!field && checkedFields.has(field)
     const isHovered        = !!field && hoveredField === field
     const isPopoverOpen    = !!field && popoverField === field
@@ -657,8 +645,7 @@ export default function LeftPanel1040({
       owe     ? styles.rowOwe     : '',
       isOrangeSelected ? styles.rowSelected     : '',
       isBlueSelected   ? styles.rowSelectedBlue : '',
-      isReviewed       ? styles.rowReviewed     : '',
-      isChecked && !isReviewed ? styles.rowChecked : '',
+      isChecked        ? styles.rowChecked      : '',
       showYoyTint      ? rowYoyClass(yoy!)      : '',
       clickable        ? styles.rowClickable    : '',
       commentField === field ? styles.rowCommentOpen : '',
@@ -672,8 +659,7 @@ export default function LeftPanel1040({
       value === undefined ? styles.valueBoxEmpty    : '',
       isOrangeSelected    ? styles.valueBoxSelected : '',
       isBlueSelected      ? styles.valueBoxSelectedBlue : '',
-      isReviewed && !isSelected ? styles.valueBoxReviewed : '',
-      isChecked && !isReviewed && !isSelected ? styles.valueBoxChecked : '',
+      isChecked && !isSelected ? styles.valueBoxChecked : '',
       isCommentOpen && !isSelected ? styles.valueBoxCommentOpen : '',
     ].filter(Boolean).join(' ')
 
@@ -683,8 +669,7 @@ export default function LeftPanel1040({
       kind === 'source' ? styles.valueNumSource : '',
       isOrangeSelected  ? styles.valueNumSelected   : '',
       isBlueSelected    ? styles.valueNumSelectedBlue : '',
-      isReviewed && !isSelected ? styles.valueNumReviewed : '',
-      isChecked && !isReviewed && !isSelected ? styles.valueNumChecked : '',
+      isChecked && !isSelected ? styles.valueNumChecked : '',
     ].filter(Boolean).join(' ')
 
     return (
@@ -709,8 +694,8 @@ export default function LeftPanel1040({
         <td className={styles.cellValue}>
           <div className={styles.cellValueInner}>
             <div className={valueCellCls}>
-              {/* Reviewed check icon (AI review) — left side of value box */}
-              {isReviewed && (
+              {/* User check — inside value box (same pattern for every checked output) */}
+              {isChecked && (
                 <span className={styles.reviewedIcon}><CircleCheck size="small" /></span>
               )}
 
@@ -723,10 +708,10 @@ export default function LeftPanel1040({
 
             </div>
 
-            {/* Info — also available via row click; opens FieldPopover */}
+            {/* Info — opens FieldPopover only from this button */}
             {!!field && fieldHasPopover(field) && value !== undefined && (
               <Tooltip
-                text={kind === 'calc' ? 'Click row or icon to view subtotals' : 'Click row or icon to view sources'}
+                text={kind === 'calc' ? 'View subtotals' : 'View sources'}
                 placement="top"
                 disabled={isPopoverOpen}
               >
@@ -744,8 +729,8 @@ export default function LeftPanel1040({
               </Tooltip>
             )}
 
-            {/* Check button — outside value box, shown on hover */}
-            {showCheckBtn && !isReviewed && (
+            {/* Check toggle — hover affordance; checked state shows inside the value box */}
+            {showCheckBtn && (
               <Tooltip
                 text={activityTooltip(
                   isChecked ? 'Unmark as correct' : 'Mark as correct',
@@ -759,11 +744,6 @@ export default function LeftPanel1040({
               >
                 <CircleCheck size="small" />
               </button></Tooltip>
-            )}
-
-            {/* Static check icon when checked but not hovered */}
-            {isChecked && !isReviewed && !isHovered && (
-              <span className={styles.checkedIcon}><CircleCheck size="small" /></span>
             )}
 
             {/* Comment button — outside value box, shown on hover */}
@@ -898,15 +878,15 @@ export default function LeftPanel1040({
               <span className={styles.summaryCardSub}>Line-by-line · 2025 return</span>
             </div>
 
-            {/* Column headers — structure mirrors summaryRowLeft + summaryRowRight exactly */}
+            {/* Column headers — fixed widths match .summaryCurrVal / Prior / Diff / Pct / EndActions */}
             <div className={styles.summaryColHeaders}>
               <div className={styles.summaryColSpacer} />
               <div className={styles.summaryColValues}>
-                <div className={styles.summaryColLabel}>Current year</div>
-                <div className={styles.summaryColLabel}>Prior year</div>
-                <div className={styles.summaryColLabel}>Change $</div>
-                <div className={styles.summaryColLabel}>Change %</div>
-                <div className={styles.summaryColLabel} />
+                <div className={`${styles.summaryColLabel} ${styles.summaryColCurr}`}>Current year</div>
+                <div className={`${styles.summaryColLabel} ${styles.summaryColPrior}`}>Prior year</div>
+                <div className={`${styles.summaryColLabel} ${styles.summaryColDiff}`}>Change $</div>
+                <div className={`${styles.summaryColLabel} ${styles.summaryColPct}`}>Change %</div>
+                <div className={`${styles.summaryColLabel} ${styles.summaryColActions}`} aria-hidden="true" />
               </div>
             </div>
 
@@ -987,7 +967,6 @@ export default function LeftPanel1040({
                       const hasPrior = prior !== null
                       const diff = hasPrior ? row.curr - prior! : null
                       const pctChg = hasPrior && prior !== 0 ? Math.round((row.curr - prior!) / Math.abs(prior!) * 100) : null
-                      const isReviewed = !!row.field && reviewedHas(row.field)
                       const isChecked  = !!row.field && checkedFields.has(row.field)
                       const isFlagged  = !!row.field && flaggedFields.has(row.field)
                       const flagNote   = row.field ? (flagNotes[row.field] ?? '') : ''
@@ -1026,7 +1005,7 @@ export default function LeftPanel1040({
                         styles.summarySubRow,
                         isOrange ? styles.summarySubRowOrange : '',
                         isBlue   ? styles.summarySubRowBlue   : '',
-                        isReviewed ? styles.summarySubRowReviewed : '',
+                        isChecked ? styles.summarySubRowChecked : '',
                         clickable  ? styles.summarySubRowClickable : '',
                       ].filter(Boolean).join(' ')
 
@@ -1036,16 +1015,9 @@ export default function LeftPanel1040({
                           className={subRowCls}
                           data-field-row={row.field || undefined}
                           onMouseDown={clickable ? (e) => e.stopPropagation() : undefined}
-                          onClick={clickable ? (e) => {
-                            // Always select; open flyout when this line has sources/calc — docs open from the flyout
+                          onClick={clickable ? () => {
+                            // Selection only — Sources / flyouts open from (i) or source links
                             onFieldClick?.(row.field!)
-                            if (hasPopover && row.field) {
-                              const anchor = (e.currentTarget as HTMLElement).querySelector(
-                                `.${styles.summaryInfoBtn}`,
-                              ) as HTMLElement | null
-                              openSummaryInfo(row.field, anchor ?? (e.currentTarget as HTMLElement))
-                              onDismissOutputSourcesCoach?.()
-                            }
                           } : undefined}
                           onMouseEnter={row.field ? () => setHoveredField(row.field!) : undefined}
                           onMouseLeave={row.field ? () => setHoveredField(null) : undefined}
@@ -1211,18 +1183,13 @@ export default function LeftPanel1040({
                 className={`${styles.summarySubRow} ${styles.summaryOweRow} ${isIssue && isSelected ? styles.summarySubRowOrange : ''} ${isSelected && !isIssue ? styles.summarySubRowBlue : ''}`}
                 role="button"
                 tabIndex={0}
-                onClick={(e) => {
+                onClick={() => {
                   onFieldClick?.('amountOwed')
-                  const anchor = (e.currentTarget as HTMLElement).querySelector(
-                    `.${styles.summaryInfoBtn}`,
-                  ) as HTMLElement | null
-                  openSummaryInfo('amountOwed', anchor ?? (e.currentTarget as HTMLElement))
                 }}
                 onKeyDown={e => {
                   if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault()
                     onFieldClick?.('amountOwed')
-                    openSummaryInfo('amountOwed', e.currentTarget as HTMLElement)
                   }
                 }}
               >
